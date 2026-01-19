@@ -1,32 +1,59 @@
-from pathlib import Path
-
+import os
 from dotenv import load_dotenv
-from loguru import logger
+from qdrant_client import QdrantClient
+import openai
 
-# Load environment variables from .env file if it exists
+# Load environment variables from .env file
 load_dotenv()
 
-# Paths
-PROJ_ROOT = Path(__file__).resolve().parents[1]
-logger.info(f"PROJ_ROOT path is: {PROJ_ROOT}")
+class Settings:
+    """
+    Application configuration settings.
+    Handles logic for switching between Cloud and Local Qdrant instances.
+    """
+    def __init__(self):
+        # 1. Load Toggle
+        # Default to True not to break if env var is missing, but can be set to False
+        self.USE_CLOUD = os.getenv("USE_CLOUD", "True").lower() == "true"
+        
+        # 2. Qdrant Setup
+        if self.USE_CLOUD:
+            print("🔧 Configuration: Using Qdrant CLOUD Mode")
+            self.QDRANT_URL = os.getenv("QDRANT_CLOUD_URL")
+            self.QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+            
+            if not self.QDRANT_URL or not self.QDRANT_API_KEY:
+                raise ValueError("❌ Error: QDRANT_CLOUD_URL and QDRANT_API_KEY must be set in .env when USE_CLOUD=True")
+                
+            self.qdrant_client = QdrantClient(
+                url=self.QDRANT_URL,
+                api_key=self.QDRANT_API_KEY,
+            )
+        else:
+            print("🔧 Configuration: Using Qdrant LOCAL Mode")
+            # Ensure the local directory exists or will be created by QdrantClient
+            local_path = "./local_qdrant_db"
+            self.qdrant_client = QdrantClient(path=local_path)
 
-DATA_DIR = PROJ_ROOT / "data"
-RAW_DATA_DIR = DATA_DIR / "raw"
-INTERIM_DATA_DIR = DATA_DIR / "interim"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-EXTERNAL_DATA_DIR = DATA_DIR / "external"
+        # 3. OpenAI Setup
+        self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+        if not self.OPENAI_API_KEY:
+             # Warning only, as some parts might work without it (e.g. pure vector retrieval if embeddings are pre-calculated, though unlikely)
+             print("⚠️ Warning: OPENAI_API_KEY not found in .env")
+        else:
+            openai.api_key = self.OPENAI_API_KEY
 
-MODELS_DIR = PROJ_ROOT / "models"
+    def get_qdrant_client(self):
+        return self.qdrant_client
 
-REPORTS_DIR = PROJ_ROOT / "reports"
-FIGURES_DIR = REPORTS_DIR / "figures"
-
-# If tqdm is installed, configure loguru with tqdm.write
-# https://github.com/Delgan/loguru/issues/135
+# Instantiate a global settings object
 try:
-    from tqdm import tqdm
+    settings = Settings()
+    qdrant_client = settings.get_qdrant_client()
+except Exception as e:
+    print(f"Failed to initialize configuration: {e}")
+    raise
 
-    logger.remove(0)
-    logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
-except ModuleNotFoundError:
-    pass
+def get_client():
+    """Returns the initialized QdrantClient instance."""
+    return qdrant_client
