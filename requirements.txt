@@ -9,4 +9,5 @@ typer
 qdrant-client
 sentence-transformers
 pandas
+datasets
 -e .

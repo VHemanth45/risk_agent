@@ -7,6 +7,7 @@ import typer
 # import pandas as pd # Not strictly needed if we just use lists
 from sentence_transformers import SentenceTransformer
 from qdrant_client import models
+from datasets import load_dataset
 
 # Ensure project root is in path for imports
 PROJ_ROOT = Path(__file__).resolve().parents[1]
@@ -30,11 +31,20 @@ def load_raw_data():
             # Remove leading numbering like "1. ", "309. "
             cleaned = re.sub(r'^\d+\.\s*', '', chunk)
             if cleaned:
-                # MATCHING THE IMAGE SCHEMA:
+                # Prepend metadata to the text being embedded for consistency
+                # Since these are local files, we assign default "type" and "personality"
+                scam_type = "legit_banking"
+                personality = "unknown"
+                
+                embedded_text = f"Type: {scam_type}\nPersonality: {personality}\nDialogue:\n{cleaned}"
+
                 data.append({
-                    "text": cleaned,
+                    "text": embedded_text, # Embed the structured text
+                    "original_text": cleaned,
                     "category": "ground_truth",
                     "risk_label": "legit",
+                    "scam_type": scam_type,
+                    "personality": personality,
                     "description": "Safe conversations (Normal banking)"
                 })
     else:
@@ -50,24 +60,72 @@ def load_raw_data():
             if not chunk: continue
             cleaned = re.sub(r'^\d+\.\s*', '', chunk)
             if cleaned:
-                # MATCHING THE IMAGE SCHEMA:
+                # Known scam scripts
+                scam_type = "scam_scripts"
+                personality = "unknown"
+                
+                embedded_text = f"Type: {scam_type}\nPersonality: {personality}\nDialogue:\n{cleaned}"
+                
                 data.append({
-                    "text": cleaned,
+                    "text": embedded_text,
+                    "original_text": cleaned,
                     "category": "ground_truth",
                     "risk_label": "scam", 
+                    "scam_type": scam_type,
+                    "personality": personality,
                     "description": "The pre-loaded data (Pig Butchering scripts, etc.)"
                 })
     else:
         logger.warning(f"File not found: {scam_path}")
+
+    # Process Hugging Face Dataset: BothBosu/multi-agent-scam-conversation
+    try:
+        logger.info("Loading Hugging Face dataset: BothBosu/multi-agent-scam-conversation")
+        # Load the dataset (assuming 'train' split if not specified, but explicit is better)
+        hf_dataset = load_dataset("BothBosu/multi-agent-scam-conversation", split="train")
+        
+        for item in hf_dataset:
+            # item keys based on image: 'dialogue', 'type', 'labels', 'personality'
+            try:
+                raw_text = item.get("dialogue", "")
+                if not raw_text.strip():
+                    continue
+
+                # Image shows 'labels' (plural)
+                label_val = item.get("labels") 
+                # 0 -> legit, 1 -> scam
+                risk_label = "scam" if label_val == 1 else "legit"
+                
+                scam_type = item.get("type", "unknown")
+                personality = item.get("personality", "unknown")
+                
+                # Construct text for embedding utilizing metadata
+                embedded_text = f"Type: {scam_type}\nPersonality: {personality}\nDialogue:\n{raw_text}"
+                
+                data.append({
+                    "text": embedded_text,
+                    "original_text": raw_text,
+                    "category": "hf_dataset",
+                    "risk_label": risk_label,
+                    "scam_type": scam_type,
+                    "personality": personality,
+                    "description": f"Source: BothBosu/multi-agent-scam-conversation, Type: {scam_type}"
+                })
+            except Exception as e:
+                logger.warning(f"Skipping an item due to error: {e}")
+                
+    except Exception as e:
+        logger.error(f"Failed to load HF dataset: {e}")
                 
     return data
 
 @app.command()
 def main(
     collection_name: str = "financial_risk_data",
-    model_name: str = "all-MiniLM-L6-v2",
-    batch_size: int = 64,
-    recreate: bool = False
+    model_name: str = "BAAI/bge-m3",
+    batch_size: int = 4,
+    recreate: bool = False,
+    max_seq_length: int = 1024
 ):
     """
     Load data, generate embeddings, and upsert to Qdrant.
@@ -83,6 +141,9 @@ def main(
     # Initialize Model
     logger.info(f"Loading embedding model: {model_name}...")
     model = SentenceTransformer(model_name)
+    model.max_seq_length = max_seq_length
+    logger.info(f"Model sequence length set to: {max_seq_length}")
+    logger.info(f"Model loaded on device: {model.device}")
     
     texts = [d["text"] for d in raw_data]
     
@@ -96,16 +157,18 @@ def main(
     collections = client.get_collections().collections
     exists = any(c.name == collection_name for c in collections)
     
+    embedding_dim = model.get_sentence_embedding_dimension()
+    
     if not exists or recreate:
         if recreate and exists:
             logger.info(f"Deleting existing collection {collection_name}...")
             client.delete_collection(collection_name)
             
-        logger.info(f"Creating collection {collection_name}...")
+        logger.info(f"Creating collection {collection_name} with dimension {embedding_dim}...")
         client.create_collection(
             collection_name=collection_name,
             vectors_config=models.VectorParams(
-                size=384, # Output size of all-MiniLM-L6-v2
+                size=embedding_dim, 
                 distance=models.Distance.COSINE
             )
         )
