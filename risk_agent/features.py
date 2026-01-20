@@ -119,9 +119,23 @@ def load_raw_data():
                 
     return data
 
+def generate_embeddings(texts, model_name="BAAI/bge-m3", max_seq_length=1024, batch_size=4):
+    """
+    Generate embeddings for a list of texts using the specified model.
+    """
+    logger.info(f"Loading embedding model: {model_name}...")
+    model = SentenceTransformer(model_name)
+    model.max_seq_length = max_seq_length
+    logger.info(f"Model sequence length set to: {max_seq_length}")
+    logger.info(f"Model loaded on device: {model.device}")
+    
+    logger.info("Generating embeddings (this may take a while)...")
+    embeddings = model.encode(texts, show_progress_bar=True, batch_size=batch_size)
+    return embeddings, model.get_sentence_embedding_dimension()
+
 @app.command()
 def main(
-    collection_name: str = "financial_risk_data",
+    collection_name: str = "text_based",
     model_name: str = "BAAI/bge-m3",
     batch_size: int = 4,
     recreate: bool = False,
@@ -138,17 +152,10 @@ def main(
         logger.error("No data found! Exiting.")
         return
 
-    # Initialize Model
-    logger.info(f"Loading embedding model: {model_name}...")
-    model = SentenceTransformer(model_name)
-    model.max_seq_length = max_seq_length
-    logger.info(f"Model sequence length set to: {max_seq_length}")
-    logger.info(f"Model loaded on device: {model.device}")
-    
     texts = [d["text"] for d in raw_data]
     
-    logger.info("Generating embeddings (this may take a while)...")
-    embeddings = model.encode(texts, show_progress_bar=True, batch_size=batch_size)
+    # Generate Embeddings
+    embeddings, embedding_dim = generate_embeddings(texts, model_name, max_seq_length, batch_size)
     
     # Initialize Qdrant
     client = settings.get_qdrant_client()
@@ -156,8 +163,7 @@ def main(
     # Check collection
     collections = client.get_collections().collections
     exists = any(c.name == collection_name for c in collections)
-    
-    embedding_dim = model.get_sentence_embedding_dimension()
+
     
     if not exists or recreate:
         if recreate and exists:

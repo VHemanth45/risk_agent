@@ -50,6 +50,12 @@ class Settings:
         else:
             openai.api_key = self.OPENAI_API_KEY
 
+        # 4. Google Gemini Setup
+        self.GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+        if not self.GOOGLE_API_KEY:
+            print("⚠️ Warning: GOOGLE_API_KEY not found in .env")
+
+
     def get_qdrant_client(self):
         return self.qdrant_client
 

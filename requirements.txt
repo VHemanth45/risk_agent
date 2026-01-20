@@ -11,3 +11,8 @@ sentence-transformers
 pandas
 datasets
 -e .
+fastapi
+uvicorn
+python-multipart
+google-generativeai
+pillow
