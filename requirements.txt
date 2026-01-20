@@ -6,4 +6,7 @@ python-dotenv
 ruff
 tqdm
 typer
+qdrant-client
+sentence-transformers
+pandas
 -e .

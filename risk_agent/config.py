@@ -1,7 +1,14 @@
+from pathlib import Path
 import os
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 import openai
+
+# Paths
+PROJ_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJ_ROOT / "data"
+RAW_DATA_DIR = DATA_DIR / "raw"
+PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
 # Load environment variables from .env file
 load_dotenv()
