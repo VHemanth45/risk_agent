@@ -24,7 +24,7 @@ def extract_text_from_image(image_bytes: bytes) -> str:
 def analyze_risk_with_gemini(user_content: str, similar_cases: list) -> dict:
     try:
         configure_genai()
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         similar_cases_str = "\n\n".join([
             f"Case (Risk: {c['risk_label']}, Score: {c['score']:.2f}):\n{c['text_snippet']}" 
