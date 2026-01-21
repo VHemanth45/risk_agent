@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from risk_agent.config import settings
 from risk_agent.features import generate_embeddings
-from risk_agent.llm import extract_text_from_image, analyze_risk_with_gemini, transcribe_audio
+from risk_agent.llm import extract_text_from_image, analyze_risk_evidence, transcribe_audio
 from risk_agent.logic import analyze_image_risk
 from PIL import Image
 import io
@@ -138,7 +138,7 @@ async def analyze_risk(files: List[UploadFile] = File(...)):
         {aggregated_text if aggregated_text else "No readable text found."}
         """
 
-        llm_analysis = analyze_risk_with_gemini(final_user_content, similar_text_cases)
+        llm_analysis = analyze_risk_evidence(final_user_content, similar_text_cases)
         
         # --- PHASE 4: PERSIST TO MEMORY ---
         if aggregated_text.strip():

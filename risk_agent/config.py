@@ -55,6 +55,14 @@ class Settings:
         if not self.GOOGLE_API_KEY:
             print("⚠️ Warning: GOOGLE_API_KEY not found in .env")
 
+        # 5. Groq Setup
+        self.GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        if not self.GROQ_API_KEY:
+            print("⚠️ Warning: GROQ_API_KEY not found in .env")
+
+        # 6. LLM Provider Selection (default to gemini)
+        self.LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").lower()
+
 
     def get_qdrant_client(self):
         return self.qdrant_client
