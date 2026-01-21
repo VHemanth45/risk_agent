@@ -9,7 +9,7 @@ COLLECTION_NAME = "text_based"
 
 # 2. Query: Hum "Profit Screenshot" dhoondhna chahte hain
 query_text = "Mobile phone showing huge crypto profit green chart"
-print(f"🔎 Searching for: '{query_text}'...")
+print(f"Searching for: '{query_text}'...")
 
 # 3. Create Vector (With Zero Padding)
 # Note: Text search ke liye bhi humein same dimension match karni padegi
@@ -27,7 +27,7 @@ try:
         limit=3
     )
 except AttributeError:
-    print("⚠️ client.search not found, trying query_points...")
+    print(" client.search not found, trying query_points...")
     from qdrant_client.http import models
     results = client.query_points(
         collection_name=COLLECTION_NAME,
@@ -46,9 +46,9 @@ for res in results:
     payload = res.payload
     score = res.score if hasattr(res, 'score') else 0.0
     if payload.get("type") == "screenshot":
-        print(f"📸 Found Image: {payload.get('filename')} | Score: {res.score:.4f}")
+        print(f" Found Image: {payload.get('filename')} | Score: {res.score:.4f}")
         print(f"   Label: {payload.get('risk_label')}")
     else:
         # Handle cases where payload might be None or text key missing
         text_content = payload.get('text', 'No text content') if payload else 'No payload'
-        print(f"📄 Found Text: {text_content[:50]}... | Score: {res.score:.4f}")
+        print(f" Found Text: {text_content[:50]}... | Score: {res.score:.4f}")

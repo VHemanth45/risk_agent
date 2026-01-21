@@ -17,7 +17,7 @@ TARGET_SIZE = 1024
 
 # 2. Load the SMALL Model (Safe for laptop)
 # We use the standard model (512 dims) to avoid RAM crash
-console.print("🧠 Loading Standard CLIP Model (Lightweight)...")
+console.print("Loading Standard CLIP Model (Lightweight)...")
 model = SentenceTransformer('clip-ViT-B-32')
 
 # 3. Check Connection
@@ -26,14 +26,14 @@ try:
     exists = any(c.name == COLLECTION_NAME for c in collections)
     
     if not exists:
-        console.print(f"❌ Error: Collection '{COLLECTION_NAME}' not found!", style="red")
+        console.print(f" Error: Collection '{COLLECTION_NAME}' not found!", style="red")
         console.print("Ask your teammate for the exact collection name.")
         exit(1)
     else:
-        console.print(f"✅ Found collection: {COLLECTION_NAME}")
+        console.print(f" Found collection: {COLLECTION_NAME}")
 
 except Exception as e:
-    console.print(f"❌ Connection Error: {e}")
+    console.print(f" Connection Error: {e}")
     exit(1)
 
 # 4. Images Process Logic
@@ -48,7 +48,7 @@ idx = 10000
 
 for label, folder_path in IMAGE_DIRS.items():
     if not os.path.exists(folder_path):
-        console.print(f"⚠️ Folder not found: {folder_path}", style="yellow")
+        console.print(f" Folder not found: {folder_path}", style="yellow")
         continue
 
     files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
@@ -90,7 +90,7 @@ for label, folder_path in IMAGE_DIRS.items():
             idx += 1
             
         except Exception as e:
-            console.print(f"❌ Error processing {file_name}: {e}", style="red")
+            console.print(f" Error processing {file_name}: {e}", style="red")
 
 # 5. Upload to Qdrant
 if points:
@@ -100,8 +100,8 @@ if points:
             collection_name=COLLECTION_NAME,
             points=points
         )
-        console.print("✅ Image Ingestion Complete! (Memory Safe Mode)", style="green bold")
+        console.print(" Image Ingestion Complete! (Memory Safe Mode)", style="green bold")
     except Exception as e:
-        console.print(f"❌ Upload Failed: {e}", style="red")
+        console.print(f" Upload Failed: {e}", style="red")
 else:
     console.print(" No valid images found to upload.", style="red")

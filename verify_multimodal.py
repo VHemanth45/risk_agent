@@ -3,18 +3,17 @@ import io
 from PIL import Image, ImageDraw, ImageFont
 
 def create_test_image():
-    pass
-    # # Create an image with some text
-    # img = Image.new('RGB', (400, 200), color='white')
-    # d = ImageDraw.Draw(img)
-    # # Just basic text, default font
-    # d.text((10, 10), "Bank Alert: Your account is compromised.", fill=(255, 0, 0))
-    # d.text((10, 30), "Please wire $5000 to safe account immediately.", fill=(0, 0, 0))
+    # Create an image with some text
+    img = Image.new('RGB', (400, 200), color='white')
+    d = ImageDraw.Draw(img)
+    # Just basic text, default font
+    d.text((10, 10), "Bank Alert: Your account is compromised.", fill=(255, 0, 0))
+    d.text((10, 30), "Please wire $5000 to safe account immediately.", fill=(0, 0, 0))
     
-    # img_byte_arr = io.BytesIO()
-    # img.save(img_byte_arr, format='PNG')
-    # img_byte_arr.seek(0)
-    # return img_byte_arr.getvalue()
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    return img_byte_arr.getvalue()
 
 def test_api():
     url = "http://localhost:8000/analyze_risk/"

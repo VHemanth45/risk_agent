@@ -1,32 +1,50 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from risk_agent.config import settings
 from risk_agent.features import generate_embeddings
-import zipfile
+from risk_agent.llm import extract_text_from_image, analyze_risk_with_gemini, transcribe_audio
+from risk_agent.logic import analyze_image_risk
+from PIL import Image
 import io
-import re
+import uuid
+from typing import List
 from loguru import logger
-from qdrant_client import models
+from qdrant_client.http import models
 
 app = FastAPI(title="ScamShield Risk Agent", version="0.1.0")
+
+HISTORY_COLLECTION = "user_history"
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Ensure the user_history collection exists for long-term memory.
+    """
+    client = settings.get_qdrant_client()
+    try:
+        collections = client.get_collections().collections
+        exists = any(c.name == HISTORY_COLLECTION for c in collections)
+        
+        if not exists:
+            logger.info(f"Creating {HISTORY_COLLECTION} collection for Long-term Memory...")
+            client.create_collection(
+                collection_name=HISTORY_COLLECTION,
+                vectors_config=models.VectorParams(
+                    size=1024, # Matching our standard layout (CLIP/BGE + padding)
+                    distance=models.Distance.COSINE
+                )
+            )
+    except Exception as e:
+        logger.error(f"Could not initialize {HISTORY_COLLECTION}: {e}")
 
 @app.get("/")
 async def root():
     return {"message": "ScamShield Risk Agent is running", "mode": "Cloud" if settings.USE_CLOUD else "Local"}
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
-from typing import List
-from risk_agent.llm import extract_text_from_image
-
 @app.post("/analyze_risk/")
 async def analyze_risk(files: List[UploadFile] = File(...)):
-    """
-    Analyzes uploaded files (Text, Zip, or Image) for financial risk.
-    """
     aggregated_text = ""
-    valid_filenames = []
+    visual_evidence = []
+    memory_context = ""
     
     try:
         inputs_processed = 0
@@ -35,85 +53,125 @@ async def analyze_risk(files: List[UploadFile] = File(...)):
             content = await file.read()
             filename = file.filename
             
+            # --- IMAGE PROCESSING ---
             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                logger.info(f"Processing image: {filename}")
+                try:
+                    pil_image = Image.open(io.BytesIO(content))
+                    visual_result = analyze_image_risk(pil_image)
+                    if visual_result["risk_level"] in ["High", "Medium", "Low"]:
+                        visual_evidence.append({"filename": filename, "visual_risk": visual_result})
+                except Exception as v_err:
+                    logger.error(f"Visual fail: {v_err}")
+
                 extracted = extract_text_from_image(content)
                 if extracted:
-                    aggregated_text += f"\n--- Source: {filename} (Image) ---\n{extracted}\n"
+                    aggregated_text += f"\n--- Source: {filename} (Image Text) ---\n{extracted}\n"
                     inputs_processed += 1
             
+            # --- AUDIO PROCESSING ---
+            elif filename.lower().endswith(('.mp3', '.wav', '.m4a', '.ogg')):
+                mime = "audio/mp3"
+                if filename.lower().endswith('.wav'): mime = "audio/wav"
+                elif filename.lower().endswith('.m4a'): mime = "audio/mp4"
+                
+                transcript = transcribe_audio(content, mime_type=mime)
+                if transcript:
+                    aggregated_text += f"\n--- Source: {filename} (Audio Transcript) ---\n{transcript}\n"
+                    inputs_processed += 1
+
+            # --- TEXT FILE PROCESSING ---
             elif filename.endswith('.txt'):
                 text = content.decode('utf-8', errors='replace')
                 if text.strip():
-                    aggregated_text += f"\n--- Source: {filename} (Text) ---\n{text.strip()}\n"
+                    aggregated_text += f"\n--- Source: {filename} (Chat Log) ---\n{text.strip()}\n"
                     inputs_processed += 1
             
-            else:
-                 logger.warning(f"Skipping unsupported file type: {filename}")
+        # --- PHASE 2: SEARCH GENOME (Public Database) ---
+        similar_text_cases = []
+        if aggregated_text.strip():
+            search_query = aggregated_text[:2000] 
+            embeddings, _ = generate_embeddings([search_query])
+            query_vector = embeddings[0]
             
-        if not aggregated_text.strip():
-             raise HTTPException(status_code=400, detail="No readable text found in uploaded files.")
-             
-        # Generate Embeddings (for the whole context or chunks?)
-        # For simple mapping, let's embed the whole aggregated text to find broad context, 
-        # OR split into chunks if too large. For now, let's try whole text or first 2000 chars for search.
-        search_query = aggregated_text[:2000] 
-        embeddings, _ = generate_embeddings([search_query])
-        query_vector = embeddings[0]
-        
-        # Query Qdrant
-        client = settings.get_qdrant_client()
-        collection_name = "text_based"
-        
-        search_result = client.query_points(
-            collection_name=collection_name,
-            query=query_vector.tolist(),
-            limit=5,
-            with_payload=True
-        )
+            client = settings.get_qdrant_client()
+            
+            # 1. Search Known Scam Genome (Public)
+            search_result = client.query_points(
+                collection_name="text_based",
+                query=query_vector.tolist(),
+                limit=5
+            )
+            for hit in search_result.points:
+                similar_text_cases.append({
+                    "text_snippet": (hit.payload.get("original_text", "") or hit.payload.get("text", ""))[:300] + "...",
+                    "risk_label": hit.payload.get("risk_label", "unknown"),
+                    "score": float(hit.score)
+                })
 
-        
-        similar_cases = []
-        for hit in search_result.points:
-            similar_cases.append({
-                "text_snippet": (hit.payload.get("original_text", "") or "")[:300] + "...",
-                "risk_label": hit.payload.get("risk_label", "unknown"),
-                "score": float(hit.score),
-                "type": hit.payload.get("scam_type", "unknown")
-            })
-        if not search_result.points:
-            logger.warning("No similar vectors found in Qdrant")
+            # 2. LONG-TERM MEMORY: Search User History (Private)
+            history_result = client.query_points(
+                collection_name=HISTORY_COLLECTION,
+                query=query_vector.tolist(),
+                limit=3,
+                score_threshold=0.85 # Only bring back high-confidence matches
+            )
+            
+            if history_result.points:
+                memory_context = "PAST USER REPORTS DETECTED:\n"
+                for hit in history_result.points:
+                    prev_verdict = hit.payload.get('verdict_summary', 'No summary')
+                    memory_context += f"- Previously seen on {hit.payload.get('timestamp', 'Unknown date')}. Verdict: {prev_verdict}\n"
 
+        # --- PHASE 3: FINAL REASONING (LLM) ---
+        visual_summary = ""
+        for item in visual_evidence:
+            v = item['visual_risk']
+            visual_summary += f"- Image '{item['filename']}' detected as {v['risk_level']} Risk. Analysis: {v['analysis']}\n"
+
+        final_user_content = f"""
+        {memory_context if memory_context else ""}
+
+        VISUAL EVIDENCE FOUND:
+        {visual_summary if visual_summary else "No specific visual scam patterns detected."}
+
+        TEXTUAL/AUDIO EVIDENCE:
+        {aggregated_text if aggregated_text else "No readable text found."}
+        """
+
+        llm_analysis = analyze_risk_with_gemini(final_user_content, similar_text_cases)
         
-            
-        # Final Analysis with Heuristics (No LLM)
-        probability = 0.0
-        if similar_cases:
-            probability = min(1.0, sum(c["score"] for c in similar_cases) / len(similar_cases))
-            
-        if similar_cases and probability > 0.6:
-            analysis_result = {
-                "risk_level": "High",
-                "probability": probability,
-                "analysis": "Strong similarity to known scam patterns",
-                "sources": similar_cases
-            }
-        else:
-            analysis_result = {
-                "risk_level": "Low",
-                "probability": probability,
-                "analysis": "Low similarity to known scam patterns",
-                "sources": similar_cases
-            }
+        # --- PHASE 4: PERSIST TO MEMORY ---
+        if aggregated_text.strip():
+            try:
+                import datetime
+                client.upsert(
+                    collection_name=HISTORY_COLLECTION,
+                    points=[models.PointStruct(
+                        id=str(uuid.uuid4()),
+                        vector=query_vector.tolist(),
+                        payload={
+                            "timestamp": datetime.datetime.now().isoformat(),
+                            "original_input": aggregated_text[:500],
+                            "verdict_summary": f"{llm_analysis['risk_level']} Risk ({llm_analysis['probability']*100:.0f}%)",
+                            "recommendations": llm_analysis.get("recommendations", [])
+                        }
+                    )]
+                )
+                logger.info("Interaction saved to Long-term Memory.")
+            except Exception as e:
+                logger.error(f"Memory persistence failed: {e}")
         
         return {
             "inputs_processed": inputs_processed,
-            "analysis": analysis_result,
-            "similar_cases_found": similar_cases
+            "final_verdict": llm_analysis,
+            "detailed_evidence": {
+                "visual_analysis": visual_evidence,
+                "text_matches": similar_text_cases,
+                "aggregated_text": aggregated_text,
+                "memory_context": memory_context
+            }
         }
-
 
     except Exception as e:
         logger.error(f"Error processing request: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
