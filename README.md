@@ -20,8 +20,8 @@
 ## 🚀 Key Features
 
 *   **Multimodal Analysis**:
-    *   📸 **Images**: Detects fake crypto dashboards and extracts text using **EasyOCR**.
-    *   🎙️ **Audio**: Transcribes voice messages/calls using **Groq (Whisper-large-v3)**.
+    *   📸 **Images**: Detects fake crypto dashboards and extracts text using **Google Gemini 2.0 Flash**.
+    *   🎙️ **Audio**: Transcribes voice messages/calls using **Google Gemini 2.0 Flash**.
     *   💬 **Text**: Analyzes chat logs and emails.
 *   **Vector Search (RAG)**:
     *   Uses **Qdrant** to search a public "Scam Genome" database for known scam scripts (e.g., Pig Butchering, Tech Support scams).
@@ -38,9 +38,9 @@
 *   **Core**: Python 3.10+
 *   **API**: FastAPI, Uvicorn
 *   **Vector Database**: Qdrant (Local or Cloud)
-*   **LLM & Transcription**: Groq (Llama 3, Whisper), Google Gemini
-*   **Embeddings**: BAAI/bge-m3 (via SentenceTransformers)
-*   **OCR**: EasyOCR
+*   **LLM & Multimodal**: Google Gemini 2.0 Flash (OCR, Transcription, Analysis)
+*   **Embeddings**: CLIP / BGE (via SentenceTransformers)
+*   **Vector Database**: Qdrant (Local or Cloud)
 *   **CLI**: Rich
 
 ---
@@ -124,11 +124,8 @@ QDRANT_API_KEY=your_qdrant_api_key
 LLM_PROVIDER=gemini
 
 # --- API Keys ---
-# Required if LLM_PROVIDER=gemini
+# Required if using Gemini
 GOOGLE_API_KEY=your_google_gemini_key
-
-# Required if LLM_PROVIDER=groq OR for Audio Transcription
-GROQ_API_KEY=your_groq_api_key
 
 # Optional (if using OpenAI models in future)
 OPENAI_API_KEY=sk-...
@@ -164,22 +161,10 @@ python run_cli.py
 
 ---
 
-## 🧪 Testing
-
 Run the included verification scripts to ensure subsystems are working:
 
-*   **Verify Vector Retrieval**:
-    ```bash
-    python verify_retrieval.py
-    ```
-*   **Test OCR & Multimodal Features**:
-    ```bash
-    python verify_multimodal.py
-    ```
 *   **Run Unit Tests**:
     ```bash
-    make test
-    # OR
     pytest tests/
     ```
 
