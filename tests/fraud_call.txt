@@ -1,0 +1,29 @@
+Vikram: Hello, am I speaking to Mr. Amit?
+
+Amit: Yes, speaking. Who is this?
+
+Vikram: Sir, I am calling from the main branch regarding your SBI debit card. We are seeing here in the system that your KYC documents have expired due to the recent updates.
+
+Amit: Expired? I just used the card yesterday at the grocery store and it worked fine.
+
+Vikram: Yes sir, it is working today, but the system shows it will be blocked in exactly 23 hours if the verification isn't completed. You don't want your account to be frozen, correct?
+
+Amit: No, definitely not. I have payments to make. Do I need to come to the branch? I'm at work right now.
+
+Vikram: No need to trouble yourself, sir. Because of the digital india initiative, we are doing this verification over the call to save your time. I just need to verify your active status. Do you have your card with you?
+
+Amit: Yeah, it's in my wallet.
+
+Vikram: Okay, please confirm the long number on the front so I can pull up your file...
+
+Amit: It starts with 4591... [reads numbers]
+
+Vikram: Okay, I have matched that. Now, just to confirm you are the owner, you will receive a 6-digit code on your mobile. Please check your SMS.
+
+Amit: Wait, I see a message. It says "OTP for transaction of ₹5,000". Why does it say transaction?
+
+Vikram: Sir, that is just a dummy transaction to verify the limit. No money will be cut. It will be refunded immediately as cashback. Please tell me the code quickly, the server time is running out.
+
+Amit: Alright, if you say so. It is 8-9-3-3-2-1.
+
+Vikram: Thank you, sir. Your KYC is now successful. You can cut the call.

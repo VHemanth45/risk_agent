@@ -1,0 +1,18 @@
+12/03/24, 2:47 PM - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.
+12/03/24, 2:47 PM - +91 98765 43210: Hello sir! This is Rajesh from HDFC Bank customer care
+12/03/24, 2:48 PM - Amit Kumar: Hello, who is this?
+12/03/24, 2:48 PM - +91 98765 43210: Sir, we have detected some suspicious activity on your account. Your KYC needs immediate update otherwise your account will be blocked within 24 hours
+12/03/24, 2:49 PM - Amit Kumar: What? My account is fine. I just used it yesterday
+12/03/24, 2:49 PM - +91 98765 43210: Yes sir, but RBI new guidelines require all customers to update KYC. Please click this link to update: hdfc-kyc-update247[.]com
+12/03/24, 2:50 PM - Amit Kumar: Are you sure this is from HDFC? The link looks different
+12/03/24, 2:50 PM - +91 98765 43210: Sir 100% genuine. I am calling you from head office. You can also see my employee ID: HDFC2847
+12/03/24, 2:51 PM - +91 98765 43210: Please hurry sir, only 2 hours left for deadline
+12/03/24, 2:52 PM - Amit Kumar: Ok let me check with my branch first
+12/03/24, 2:52 PM - +91 98765 43210: No need sir! Branch is closed now. This is urgent matter. Just click link and enter your details
+12/03/24, 2:53 PM - Amit Kumar: What details do I need to enter?
+12/03/24, 2:53 PM - +91 98765 43210: Just your account number, debit card number, CVV, and OTP for verification
+12/03/24, 2:54 PM - Amit Kumar: Wait, why do you need my CVV? Banks never ask for that
+12/03/24, 2:54 PM - +91 98765 43210: Sir this is for security verification only
+12/03/24, 2:55 PM - Amit Kumar: This seems like a scam. I'm blocking you
+12/03/24, 2:55 PM - +91 98765 43210: Sir wait! Don't block! Your account will be—
+12/03/24, 2:55 PM - Amit Kumar: You blocked this contact
