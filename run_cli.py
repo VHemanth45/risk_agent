@@ -8,23 +8,39 @@ from rich.table import Table
 from rich import box
 from rich.markup import escape
 from rich.text import Text
+from rich.align import Align
+import pyfiglet
 
 console = Console()
 API_URL = "http://localhost:8000/analyze_risk/"
 
 def display_header():
     console.clear()
-    title = Text(" ScamShield Risk Agent CLI", style="bold cyan")
-    subtitle = Text("\nMultimodal Financial Fraud Detection System", style="dim")
-    hint = Text("\n(Supports multiple files: image1.png, audio.mp3, chat.txt)", style="dim italic")
     
-    header_content = Text.assemble(title, subtitle, hint)
+    # Generate Large ASCII Title
+    try:
+        title_art = pyfiglet.figlet_format("ScamShield", font="Bold")
+    except Exception:
+        title_art = pyfiglet.figlet_format("ScamShield")
+        
+    title_text = Text(title_art, style="bold cyan")
+    subtitle_text = Text("Multimodal Financial Fraud Detection System", style="bold white")
+    hint_text = Text("\n(Supports multiple files: image1.png, audio.mp3, chat.txt)", style="italic blue grey70")
     
-    console.print(Panel.fit(
-        header_content,
-        box=box.DOUBLE,
-        border_style="cyan"
-    ))
+    # Combine
+    combined = Text.assemble(title_text, "\n", subtitle_text, "\n", hint_text)
+    
+    # Display in a nice panel representing the "Cover Page"
+    console.print(
+        Panel(
+            Align.center(combined),
+            box=box.ROUNDED,
+            border_style="cyan",
+            title="[bold white]Risk Agent CLI[/bold white]",
+            subtitle="[dim]Secure & Intelligent[/dim]",
+            padding=(2, 4)
+        )
+    )
 
 def get_file_paths():
     while True:
@@ -118,7 +134,12 @@ def display_results(data):
         table.add_row(" Visual", escape(visual['filename']), f"[{color}]{risk['risk_level']} Risk[/{color}]: {escape(risk['analysis'])}")
 
     for text_case in evidence.get("text_matches", []):
-         table.add_row(" Database", f"Risk: {text_case['risk_label']}", f"Similarity: {text_case['score']:.2f} | {escape(text_case['text_snippet'][:60])}...")
+         snippet = text_case.get('text_snippet', '')
+         # Truncate for display but keep enough context
+         display_snippet = snippet[:80] + ("..." if len(snippet) > 80 else "")
+         # Convert score to percentage
+         score_pct = text_case['score'] * 100
+         table.add_row(" Database", f"Risk: {text_case['risk_label']}", f"Match: {score_pct:.1f}% | {escape(display_snippet)}")
         
     console.print(table)
     

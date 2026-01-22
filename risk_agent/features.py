@@ -119,7 +119,7 @@ def load_raw_data():
                 
     return data
 
-def generate_embeddings(texts, model_name="BAAI/bge-m3", max_seq_length=1024, batch_size=4):
+def generate_embeddings(texts, model_name="BAAI/bge-large-en-v1.5", max_seq_length=512, batch_size=32):
     """
     Generate embeddings for a list of texts using the specified model.
     """
@@ -129,17 +129,17 @@ def generate_embeddings(texts, model_name="BAAI/bge-m3", max_seq_length=1024, ba
     logger.info(f"Model sequence length set to: {max_seq_length}")
     logger.info(f"Model loaded on device: {model.device}")
     
-    logger.info("Generating embeddings (this may take a while)...")
+    logger.info(f"Generating embeddings (Batch Size: {batch_size})...")
     embeddings = model.encode(texts, show_progress_bar=True, batch_size=batch_size)
     return embeddings, model.get_sentence_embedding_dimension()
 
 @app.command()
 def main(
     collection_name: str = "text_based",
-    model_name: str = "BAAI/bge-m3",
-    batch_size: int = 4,
+    model_name: str = "BAAI/bge-large-en-v1.5",
+    batch_size: int = 32,
     recreate: bool = False,
-    max_seq_length: int = 1024
+    max_seq_length: int = 512
 ):
     """
     Load data, generate embeddings, and upsert to Qdrant.

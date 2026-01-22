@@ -1,6 +1,6 @@
 # 🛡️ ScamShield Risk Agent
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109%2B-green)
 ![Qdrant](https://img.shields.io/badge/Qdrant-Vector%20DB-red)
 ![Groq](https://img.shields.io/badge/Groq-Llama3%20%26%20Whisper-orange)
@@ -35,7 +35,7 @@
 
 ## 🛠️ Tech Stack
 
-*   **Core**: Python 3.10+
+*   **Core**: Python 3.11+
 *   **API**: FastAPI, Uvicorn
 *   **Vector Database**: Qdrant (Local or Cloud)
 *   **LLM & Multimodal**: Google Gemini 2.0 Flash (OCR, Transcription, Analysis)
@@ -49,7 +49,10 @@
 
 Ensure you have the following installed:
 
-*   **Python 3.10** or higher
+*   **Python 3.11** or higher
+*   **uv** (Package manager): [Install Guide](https://github.com/astral-sh/uv)
+    *   Linux/Mac: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+    *   Windows: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
 *   **Make** (optional, for convenience commands)
 *   **Qdrant** (Docker container or Cloud API Key)
 
@@ -64,24 +67,26 @@ Ensure you have the following installed:
     ```
 
 2.  **Set up Virtual Environment**
-    We use `uv` for fast dependency management, but standard `pip` works too.
+    We use `uv` for incredibly fast setup (10-100x faster than pip).
     ```bash
-    # Using Make
-    make create_environment
-    source .venv/bin/activate
+    # Initialize a new virtual environment
+    uv venv --python 3.11
     
-    # OR Manual
-    python3 -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    # Activate
+    # Linux/Mac:
+    source .venv/bin/activate
+    # Windows:
+    .venv\Scripts\activate
     ```
 
 3.  **Install Dependencies**
+    Since we cleaned up the requirements, this will work seamlessly on Windows, Mac, and Linux.
     ```bash
-    # Using Make
+    # Using Make (if available)
     make requirements
     
-    # OR Manual
-    pip install -r requirements.txt
+    # OR Manual (using uv)
+    uv pip install -r requirements.txt
     ```
 
 4.  **Download/Initialize Data**

@@ -102,9 +102,27 @@ async def analyze_risk(files: List[UploadFile] = File(...)):
                 limit=5
             )
             for hit in search_result.points:
+                payload = hit.payload or {}
+                # Try multiple common keys for text content
+                raw_text = (
+                    payload.get("original_text") or 
+                    payload.get("text") or 
+                    payload.get("page_content") or 
+                    payload.get("content") or
+                    payload.get("description") or
+                    "No text content available"
+                )
+                
+                # specific fix: if it's a list (some embeddings do this), join it
+                if isinstance(raw_text, list):
+                    raw_text = " ".join(str(x) for x in raw_text)
+                
+                # Clean up whitespace
+                clean_text = " ".join(str(raw_text).split())
+                
                 similar_text_cases.append({
-                    "text_snippet": (hit.payload.get("original_text", "") or hit.payload.get("text", ""))[:300] + "...",
-                    "risk_label": hit.payload.get("risk_label", "unknown"),
+                    "text_snippet": clean_text[:300],
+                    "risk_label": payload.get("risk_label", "unknown"),
                     "score": float(hit.score)
                 })
 
