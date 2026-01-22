@@ -119,7 +119,7 @@ def load_raw_data():
                 
     return data
 
-def generate_embeddings(texts, model_name="BAAI/bge-large-en-v1.5", max_seq_length=512, batch_size=32):
+def generate_embeddings(texts, model_name="BAAI/bge-base-en-v1.5", max_seq_length=512, batch_size=32):
     """
     Generate embeddings for a list of texts using the specified model.
     """
@@ -135,9 +135,9 @@ def generate_embeddings(texts, model_name="BAAI/bge-large-en-v1.5", max_seq_leng
 
 @app.command()
 def main(
-    collection_name: str = "text_based",
-    model_name: str = "BAAI/bge-large-en-v1.5",
-    batch_size: int = 32,
+    collection_name: str = "Scam Genome",
+    model_name: str = "BAAI/bge-base-en-v1.5",
+    batch_size: int = 8,
     recreate: bool = False,
     max_seq_length: int = 512
 ):

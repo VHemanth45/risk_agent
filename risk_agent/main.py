@@ -29,7 +29,7 @@ async def startup_event():
             client.create_collection(
                 collection_name=HISTORY_COLLECTION,
                 vectors_config=models.VectorParams(
-                    size=1024, # Matching our standard layout (CLIP/BGE + padding)
+                    size=768, # Matching BGE-base standard (768 dims)
                     distance=models.Distance.COSINE
                 )
             )
@@ -97,7 +97,7 @@ async def analyze_risk(files: List[UploadFile] = File(...)):
             
             # 1. Search Known Scam Genome (Public)
             search_result = client.query_points(
-                collection_name="text_based",
+                collection_name="Scam Genome",
                 query=query_vector.tolist(),
                 limit=5
             )

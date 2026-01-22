@@ -18,7 +18,7 @@ def main():
     
     try:
         results = client.query_points(
-            collection_name="text_based",
+            collection_name="Scam Genome",
             query=query_vector,
             limit=3
         ).points

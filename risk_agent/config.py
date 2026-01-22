@@ -35,6 +35,7 @@ class Settings:
             self.qdrant_client = QdrantClient(
                 url=self.QDRANT_URL,
                 api_key=self.QDRANT_API_KEY,
+                timeout=40,
             )
         else:
             print("🔧 Configuration: Using Qdrant LOCAL Mode")

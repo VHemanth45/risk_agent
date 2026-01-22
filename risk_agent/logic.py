@@ -9,7 +9,7 @@ from PIL import Image
 vision_model = SentenceTransformer('clip-ViT-B-32')
 
 client = get_client()
-COLLECTION_NAME = "text_based"
+COLLECTION_NAME = "Scam Genome"
 TARGET_SIZE = 1024
 
 def analyze_image_risk(image_file):

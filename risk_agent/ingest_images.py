@@ -11,9 +11,9 @@ console = Console()
 client = get_client()
 
 # 1. Collection Name Check (Crucial step from your logs)
-# Your logs showed the collection is named 'text_based', NOT 'scam_genome'
-COLLECTION_NAME = "text_based" 
-TARGET_SIZE = 1024
+# Your logs showed the collection is named 'Scam Genome'
+COLLECTION_NAME = "Scam Genome" 
+TARGET_SIZE = 768
 
 # 2. Load the SMALL Model (Safe for laptop)
 # We use the standard model (512 dims) to avoid RAM crash
@@ -93,13 +93,21 @@ for label, folder_path in IMAGE_DIRS.items():
             console.print(f" Error processing {file_name}: {e}", style="red")
 
 # 5. Upload to Qdrant
+# 5. Upload to Qdrant (Batched)
 if points:
-    console.print(f" Uploading {len(points)} image vectors to Cloud...")
+    BATCH_SIZE = 64
+    total_batches = (len(points) + BATCH_SIZE - 1) // BATCH_SIZE
+    console.print(f" Uploading {len(points)} image vectors to Cloud in {total_batches} batches...")
+    
     try:
-        client.upsert(
-            collection_name=COLLECTION_NAME,
-            points=points
-        )
+        for i in range(0, len(points), BATCH_SIZE):
+            batch = points[i : i + BATCH_SIZE]
+            client.upsert(
+                collection_name=COLLECTION_NAME,
+                points=batch
+            )
+            console.print(f"  Uploaded batch {i // BATCH_SIZE + 1}/{total_batches}", style="dim")
+            
         console.print(" Image Ingestion Complete! (Memory Safe Mode)", style="green bold")
     except Exception as e:
         console.print(f" Upload Failed: {e}", style="red")

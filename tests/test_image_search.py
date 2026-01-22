@@ -5,7 +5,7 @@ from risk_agent.config import get_client
 # 1. Setup
 client = get_client()
 model = SentenceTransformer('clip-ViT-B-32')
-COLLECTION_NAME = "text_based"
+COLLECTION_NAME = "Scam Genome"
 
 # 2. Query: Hum "Profit Screenshot" dhoondhna chahte hain
 query_text = "Mobile phone showing huge crypto profit green chart"

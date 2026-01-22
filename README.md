@@ -56,6 +56,50 @@ Ensure you have the following installed:
 
 ---
 
+## 🔐 Configuration
+
+### 1. Set up Qdrant Cloud (Recommended)
+If you want to use a cloud vector database (easier setup):
+1.  Sign up at [Qdrant Cloud](https://cloud.qdrant.io/).
+2.  Create a **Free Tier Cluster**.
+3.  Go to **Data Access Control** and generate an API Key.
+4.  Copy the **Cluster URL** and **API Key**.
+
+### 2. Get Groq API Key (For High-Speed Inference)
+To use Groq's LPU-powered fast inference:
+1.  Sign in to [Groq Console](https://console.groq.com/keys).
+2.  Click **Create API Key**.
+3.  Copy the key string (starts with `gsk_`).
+
+### 3. Environment Variables
+Create a `.env` file in the root directory. Copy the structure below and fill in your API keys:
+
+```ini
+# .env
+
+# --- Qdrant Setup ---
+# Set to True to use Qdrant Cloud, False to use local container/file
+USE_CLOUD=True
+QDRANT_CLOUD_URL=https://your-cluster-url.qdrant.tech
+QDRANT_API_KEY=your_qdrant_api_key
+
+# --- LLM Provider Settings ---
+# Options: "gemini" or "groq"
+LLM_PROVIDER=gemini
+
+# --- API Keys ---
+# Required if using Gemini
+GOOGLE_API_KEY=your_google_gemini_key
+
+# Required if using Groq
+GROQ_API_KEY=your_groq_api_key
+
+# Optional (if using OpenAI models in future)
+OPENAI_API_KEY=sk-...
+```
+
+---
+
 ## ⚙️ Installation
 
 1.  **Clone the Repository**
@@ -101,40 +145,6 @@ Ensure you have the following installed:
 
 ---
 
-## 🔐 Configuration
-
-### 1. Set up Qdrant Cloud (Recommended)
-If you want to use a cloud vector database (easier setup):
-1.  Sign up at [Qdrant Cloud](https://cloud.qdrant.io/).
-2.  Create a **Free Tier Cluster**.
-3.  Go to **Data Access Control** and generate an API Key.
-4.  Copy the **Cluster URL** and **API Key**.
-
-### 2. Environment Variables
-Create a `.env` file in the root directory. Copy the structure below and fill in your API keys:
-
-```ini
-# .env
-
-# --- Qdrant Setup ---
-# Set to True to use Qdrant Cloud, False to use local container/file
-USE_CLOUD=False
-QDRANT_CLOUD_URL=https://your-cluster-url.qdrant.tech
-QDRANT_API_KEY=your_qdrant_api_key
-
-# --- LLM Provider Settings ---
-# Options: "gemini" or "groq"
-LLM_PROVIDER=gemini
-
-# --- API Keys ---
-# Required if using Gemini
-GOOGLE_API_KEY=your_google_gemini_key
-
-# Optional (if using OpenAI models in future)
-OPENAI_API_KEY=sk-...
-```
-
----
 
 ## 🏃 Usage
 
