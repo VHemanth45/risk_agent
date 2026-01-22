@@ -90,10 +90,24 @@ Ensure you have the following installed:
     python -m risk_agent.features --recreate
     ```
 
+    *   **Image Data** (Scam Screenshots):
+        If you have images in `data/images/scam` and `data/images/legit`, run:
+        ```bash
+        python -m risk_agent.ingest_images
+        ```
+
 ---
 
 ## 🔐 Configuration
 
+### 1. Set up Qdrant Cloud (Recommended)
+If you want to use a cloud vector database (easier setup):
+1.  Sign up at [Qdrant Cloud](https://cloud.qdrant.io/).
+2.  Create a **Free Tier Cluster**.
+3.  Go to **Data Access Control** and generate an API Key.
+4.  Copy the **Cluster URL** and **API Key**.
+
+### 2. Environment Variables
 Create a `.env` file in the root directory. Copy the structure below and fill in your API keys:
 
 ```ini
