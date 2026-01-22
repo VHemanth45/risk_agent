@@ -9,9 +9,7 @@
 **ScamShield Risk Agent** is a state-of-the-art **Multimodal Financial Fraud Detection System**. It combines **Computer Vision (OCR)**, **Audio Transcription**, **Vector Search (RAG)**, and **Large Language Models (LLMs)** to analyze user-uploaded evidence (images, audio, text) and detect potential scams in real-time.
 
 <div align="center">
-  <img src="assets/demo_screenshot_1.png" alt="ScamShield CLI Demo 1" width="100%">
-  <br>
-  <img src="assets/demo_screenshot_2.png" alt="ScamShield CLI Demo 2" width="100%">
+  <img src="assets/Screenshot from 2026-01-22 13-38-04.png" alt="ScamShield CLI Demo 1" width="100%">
 </div>
 
 
